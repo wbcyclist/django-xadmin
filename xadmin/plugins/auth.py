@@ -11,6 +11,7 @@ from django.utils.html import escape
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
+from django.forms import ModelMultipleChoiceField
 from xadmin.layout import Fieldset, Main, Side, Row, FormHelper
 from xadmin.sites import site
 from xadmin.util import unquote, User
@@ -19,12 +20,40 @@ from xadmin.views import BaseAdminPlugin, ModelFormAdminView, ModelAdminView, Co
 
 csrf_protect_m = method_decorator(csrf_protect)
 
+ACTION_NAME = {
+    'add': _('Can add %s'),
+    'change': _('Can change %s'),
+    'edit': _('Can edit %s'),
+    'delete': _('Can delete %s'),
+    'view': _('Can view %s'),
+}
+
+
+def get_permission_name(p):
+    action = p.codename.split('_')[0]
+    if action in ACTION_NAME:
+        return ACTION_NAME[action] % str(p.content_type)
+    else:
+        return p.name
+
+
+class PermissionModelMultipleChoiceField(ModelMultipleChoiceField):
+
+    def label_from_instance(self, p):
+        return get_permission_name(p)
+
 
 class GroupAdmin(object):
     search_fields = ('name',)
     ordering = ('name',)
     style_fields = {'permissions': 'm2m_transfer'}
     model_icon = 'group'
+
+    def get_field_attrs(self, db_field, **kwargs):
+        attrs = super(GroupAdmin, self).get_field_attrs(db_field, **kwargs)
+        if db_field.name == 'permissions':
+            attrs['form_class'] = PermissionModelMultipleChoiceField
+        return attrs
 
 
 class UserAdmin(object):
@@ -36,6 +65,12 @@ class UserAdmin(object):
     style_fields = {'user_permissions': 'm2m_transfer'}
     model_icon = 'user'
     relfield_style = 'fk-ajax'
+
+    def get_field_attrs(self, db_field, **kwargs):
+        attrs = super(UserAdmin, self).get_field_attrs(db_field, **kwargs)
+        if db_field.name == 'user_permissions':
+            attrs['form_class'] = PermissionModelMultipleChoiceField
+        return attrs
 
     def get_model_form(self, **kwargs):
         if self.org_obj is None:
@@ -73,7 +108,14 @@ class UserAdmin(object):
 
 
 class PermissionAdmin(object):
+
+    def show_name(self, p):
+        return get_permission_name(p)
+    show_name.short_description = _('Permission Name')
+    show_name.is_column = True
+
     model_icon = 'lock'
+    list_display = ('show_name', )
 
 site.register(Group, GroupAdmin)
 site.register(User, UserAdmin)
