@@ -9,16 +9,13 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect
 from django.utils.html import escape
 from django.utils.translation import ugettext as _
-from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.forms import ModelMultipleChoiceField
 from xadmin.layout import Fieldset, Main, Side, Row, FormHelper
 from xadmin.sites import site
 from xadmin.util import unquote, User
-from xadmin.views import BaseAdminPlugin, ModelFormAdminView, ModelAdminView, CommAdminView
+from xadmin.views import BaseAdminPlugin, ModelFormAdminView, ModelAdminView, CommAdminView, csrf_protect_m
 
-
-csrf_protect_m = method_decorator(csrf_protect)
 
 ACTION_NAME = {
     'add': _('Can add %s'),
@@ -169,6 +166,7 @@ class ChangePasswordView(ModelAdminView):
     change_password_form = AdminPasswordChangeForm
     change_user_password_template = None
 
+    @csrf_protect_m
     def get(self, request, object_id):
         if not self.has_change_permission(request):
             raise PermissionDenied
@@ -203,7 +201,8 @@ class ChangePasswordView(ModelAdminView):
             'xadmin/auth/user/change_password.html'
         ], self.get_context(), current_app=self.admin_site.name)
 
-    @sensitive_post_parameters()
+    @method_decorator(sensitive_post_parameters())
+    @csrf_protect_m
     def post(self, request, object_id):
         if not self.has_change_permission(request):
             raise PermissionDenied
@@ -221,6 +220,7 @@ class ChangePasswordView(ModelAdminView):
 class ChangeAccountPasswordView(ChangePasswordView):
     change_password_form = PasswordChangeForm
 
+    @csrf_protect_m
     def get(self, request):
         self.obj = self.user
         self.form = self.change_password_form(self.obj)
@@ -235,7 +235,8 @@ class ChangeAccountPasswordView(ChangePasswordView):
         })
         return context
 
-    @sensitive_post_parameters()
+    @method_decorator(sensitive_post_parameters())
+    @csrf_protect_m
     def post(self, request):
         self.obj = self.user
         self.form = self.change_password_form(self.obj, request.POST)
