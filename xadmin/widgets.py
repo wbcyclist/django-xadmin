@@ -34,7 +34,7 @@ class AdminTimeWidget(forms.TimeInput):
 
     @property
     def media(self):
-        return vendor('timepicker.js', 'timepicker.css', 'xadmin.widget.datetime.js')
+        return vendor('datepicker.js','timepicker.js', 'timepicker.css', 'xadmin.widget.datetime.js')
 
     def __init__(self, attrs=None, format=None):
         final_attrs = {'class': 'time-field', 'size': '8'}
@@ -52,7 +52,7 @@ class AdminSelectWidget(forms.Select):
 
     @property
     def media(self):
-        return vendor('select2.js', 'select2.css', 'xadmin.widget.select.js')
+        return vendor('select.js', 'select.css', 'xadmin.widget.select.js')
 
 
 class AdminSplitDateTime(forms.SplitDateTimeWidget):

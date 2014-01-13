@@ -28,12 +28,12 @@ class BaseSetting(object):
 xadmin.site.register(views.BaseAdminView, BaseSetting)
 
 
-class GolbeSetting(object):
-    globe_search_models = [Host, IDC]
-    globe_models_icon = {
+class GlobalSetting(object):
+    global_search_models = [Host, IDC]
+    global_models_icon = {
         Host: 'laptop', IDC: 'cloud'
     }
-xadmin.site.register(views.CommAdminView, GolbeSetting)
+xadmin.site.register(views.CommAdminView, GlobalSetting)
 
 
 class MaintainInline(object):
@@ -89,14 +89,14 @@ class HostAdmin(object):
     form_layout = (
         Main(
             TabHolder(
-                Tab('Comm Fiels',
+                Tab('Comm Fields',
                     Fieldset('Company data',
                              'name', 'idc',
                              description="some comm fields, required"
                              ),
                     Inline(MaintainLog),
                     ),
-                Tab('Extend Fiedls',
+                Tab('Extend Fields',
                     Fieldset('Contact details',
                              'service_type',
                              Row('brand', 'model'),

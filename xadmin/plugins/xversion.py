@@ -13,6 +13,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
 from django.utils.translation import ugettext as _
 from xadmin.layout import Field, render_field
+from xadmin.plugins.inline import Inline
 from xadmin.plugins.actions import BaseActionView
 from xadmin.plugins.inline import InlineModelAdmin
 from xadmin.sites import site
@@ -38,7 +39,7 @@ def _autoregister(admin, model, follow=None):
             model, follow=follow, format=admin.reversion_format)
 
 
-def _registe_model(admin, model):
+def _register_model(admin, model):
     if not hasattr(admin, 'revision_manager'):
         admin.revision_manager = default_revision_manager
     if not hasattr(admin, 'reversion_format'):
@@ -69,13 +70,13 @@ def _registe_model(admin, model):
         _autoregister(admin, model, inline_fields)
 
 
-def registe_models(admin_site=None):
+def register_models(admin_site=None):
     if admin_site is None:
         admin_site = site
 
     for model, admin in admin_site._registry.items():
         if getattr(admin, 'reversion_enable', False):
-            _registe_model(admin, model)
+            _register_model(admin, model)
 
 
 class ReversionPlugin(BaseAdminPlugin):
@@ -621,14 +622,21 @@ class ActionRevisionPlugin(BaseAdminPlugin):
         return self.revision_context_manager.create_revision(manage_manually=False)(self.do_action_func(__))()
 
 
+class VersionInline(object):
+    model = Version
+    extra = 0
+    style = 'accordion'
+
 class ReversionAdmin(object):
     model_icon = 'exchange'
 
+    list_display = ('__str__', 'date_created', 'user', 'comment')
+    list_display_links = ('__str__',)
 
-class VersionAdmin(object):
-    model_icon = 'file'
+    list_filter = ('date_created', 'user')
+    inlines = [VersionInline]
+
 site.register(Revision, ReversionAdmin)
-site.register(Version, VersionAdmin)
 
 site.register_modelview(
     r'^recover/$', RecoverListView, name='%s_%s_recoverlist')

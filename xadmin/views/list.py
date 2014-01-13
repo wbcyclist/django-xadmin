@@ -146,7 +146,8 @@ class ListAdminView(ModelAdminView):
         """
         Return a sequence containing the fields to be displayed on the list.
         """
-        self.base_list_display = COL_LIST_VAR in self.request.GET and self.request.GET[COL_LIST_VAR].split('.') or self.list_display
+        self.base_list_display = (COL_LIST_VAR in self.request.GET and self.request.GET[COL_LIST_VAR] != "" and \
+            self.request.GET[COL_LIST_VAR].split('.')) or self.list_display
         return list(self.base_list_display)
 
     @filter_hook
@@ -604,8 +605,7 @@ class ListAdminView(ModelAdminView):
     def get_media(self):
         media = super(ListAdminView, self).get_media() + self.vendor('xadmin.page.list.js', 'xadmin.page.form.js')
         if self.list_display_links_details:
-            media += self.vendor('xadmin.plugin.details.js',
-                                 'xadmin.modal.css', 'xadmin.form.css')
+            media += self.vendor('xadmin.plugin.details.js', 'xadmin.form.css')
         return media
 
     # Blocks
