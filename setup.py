@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='django-xadmin',
-    version='0.4.2',
+    version='0.4.4',
     description='Drop-in replacement of Django admin comes with lots of goodies, fully extensible with plugin support, pretty UI based on Twitter Bootstrap.',
     long_description=open('README.rst').read(),
     author='sshwsfc',
@@ -22,10 +22,10 @@ setup(
         'django-crispy-forms>=1.4.0',
     ],
     extras_require={
-        'Excel': ['xlwt'],
+        'Excel': ['xlwt', 'xlsxwriter'],
         'Reversion': ['django-reversion'],
     },
-    zip_safe=True,
+    zip_safe=False,
     keywords=['admin', 'django', 'xadmin', 'bootstrap'],
     classifiers=[
         'Development Status :: 4 - Beta',

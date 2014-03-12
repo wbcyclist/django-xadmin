@@ -5,7 +5,6 @@ from xadmin.layout import Main, TabHolder, Tab, Fieldset, Row, Col, AppendedText
 from xadmin.plugins.inline import Inline
 from xadmin.plugins.batch import BatchChangeAction
 
-
 class MainDashboard(object):
     widgets = [
         [
@@ -31,8 +30,9 @@ xadmin.site.register(views.BaseAdminView, BaseSetting)
 class GlobalSetting(object):
     global_search_models = [Host, IDC]
     global_models_icon = {
-        Host: 'laptop', IDC: 'cloud'
+        Host: 'fa fa-laptop', IDC: 'fa fa-cloud'
     }
+    menu_style = 'accordion'
 xadmin.site.register(views.CommAdminView, GlobalSetting)
 
 
@@ -75,7 +75,7 @@ class HostAdmin(object):
 
     search_fields = ['name', 'ip', 'description']
     list_filter = ['idc', 'guarantee_date', 'status', 'brand', 'model',
-                   'cpu', 'core_num', 'hard_disk', 'memory', 'service_type']
+                   'cpu', 'core_num', 'hard_disk', 'memory', ('service_type',xadmin.filters.MultiSelectFieldListFilter)]
 
     list_bookmarks = [{'title': "Need Guarantee", 'query': {'status__exact': 2}, 'order': ('-guarantee_date',), 'cols': ('brand', 'guarantee_date', 'service_type')}]
 
@@ -85,6 +85,7 @@ class HostAdmin(object):
     save_as = True
 
     aggregate_fields = {"guarantee_date": "min"}
+    grid_layouts = ('table', 'thumbnails')
 
     form_layout = (
         Main(
@@ -116,8 +117,16 @@ class HostAdmin(object):
     )
     inlines = [MaintainInline]
     reversion_enable = True
-
-
+    
+    data_charts = {
+        "host_service_type_counts": {'title': u"Host service type count", "x-field": "service_type", "y-field": ("service_type",), 
+                              "option": {
+                                         "series": {"bars": {"align": "center", "barWidth": 0.8,'show':True}}, 
+                                         "xaxis": {"aggregate": "count", "mode": "categories"},
+                                         },
+                              },
+    }
+    
 class HostGroupAdmin(object):
     list_display = ('name', 'description')
     list_display_links = ('name',)
@@ -172,8 +181,18 @@ class AccessRecordAdmin(object):
     refresh_times = (3, 5, 10)
     data_charts = {
         "user_count": {'title': u"User Report", "x-field": "date", "y-field": ("user_count", "view_count"), "order": ('date',)},
-        "avg_count": {'title': u"Avg Report", "x-field": "date", "y-field": ('avg_count',), "order": ('date',)}
+        "avg_count": {'title': u"Avg Report", "x-field": "date", "y-field": ('avg_count',), "order": ('date',)},
+        "per_month": {'title': u"Monthly Users", "x-field": "_chart_month", "y-field": ("user_count", ), 
+                              "option": {
+                                         "series": {"bars": {"align": "center", "barWidth": 0.8,'show':True}}, 
+                                         "xaxis": {"aggregate": "sum", "mode": "categories"},
+                                         },
+                            },
     }
+    
+    def _chart_month(self,obj):
+        return obj.date.strftime("%B")
+        
 
 xadmin.site.register(Host, HostAdmin)
 xadmin.site.register(HostGroup, HostGroupAdmin)
