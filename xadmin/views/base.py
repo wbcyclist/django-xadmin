@@ -295,9 +295,11 @@ class CommAdminView(BaseAdminView):
     menu_template = 'xadmin/includes/sitemenu_default.html'
 
     site_title = None
+    site_footer = None
     global_models_icon = {}
     default_model_icon = None
     apps_label_title = {}
+    apps_icons = {}
 
     def get_site_menu(self):
         return None
@@ -321,6 +323,7 @@ class CommAdminView(BaseAdminView):
             if getattr(model_admin, 'hidden_menu', False):
                 continue
             app_label = model._meta.app_label
+            app_icon = None
             model_dict = {
                 'title': unicode(capfirst(model._meta.verbose_name_plural)),
                 'url': self.get_model_url(model, "changelist"),
@@ -349,6 +352,9 @@ class CommAdminView(BaseAdminView):
                                 app_title = getattr(mod, 'verbose_name')
                             elif 'app_title' in dir(mod):
                                 app_title = getattr(mod, 'app_title')
+                #find app icon
+                if app_label.lower() in self.apps_icons:
+                    app_icon = self.apps_icons[app_label.lower()]
 
                 nav_menu[app_key] = {
                     'title': app_title,
@@ -356,9 +362,12 @@ class CommAdminView(BaseAdminView):
                 }
 
             app_menu = nav_menu[app_key]
-            if ('first_icon' not in app_menu or
+            if app_icon:
+                app_menu['first_icon'] = app_icon
+            elif ('first_icon' not in app_menu or
                     app_menu['first_icon'] == self.default_model_icon) and model_dict.get('icon'):
                 app_menu['first_icon'] = model_dict['icon']
+
             if 'first_url' not in app_menu and model_dict.get('url'):
                 app_menu['first_url'] = model_dict['url']
 
@@ -394,12 +403,16 @@ class CommAdminView(BaseAdminView):
 
             def filter_item(item):
                 if 'menus' in item:
+                    before_filter_length = len(item['menus'])
                     item['menus'] = [filter_item(
                         i) for i in item['menus'] if check_menu_permission(i)]
+                    after_filter_length = len(item['menus'])
+                    if after_filter_length == 0 and before_filter_length > 0:
+                        return None
                 return item
 
             nav_menu = [filter_item(item) for item in menus if check_menu_permission(item)]
-            nav_menu = filter(lambda i: bool(i['menus']), nav_menu)
+            nav_menu = filter(lambda x:x, nav_menu)
 
             if not settings.DEBUG:
                 self.request.session['nav_menu'] = json.dumps(nav_menu)
@@ -428,6 +441,7 @@ class CommAdminView(BaseAdminView):
             'menu_template': self.menu_template,
             'nav_menu': nav_menu,
             'site_title': self.site_title or _(u'Django Xadmin'),
+            'site_footer': self.site_footer or _(u'my-company.inc 2013'),
             'breadcrumbs': self.get_breadcrumb()
         })
 
